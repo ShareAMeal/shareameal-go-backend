@@ -2,24 +2,24 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
-	"html"
-	"log"
-	"net/http"
-
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"gopkg.in/macaron.v1"
+	"log"
+	"time"
 )
 
 type Association struct {
-	Contact_email string // il faut bien que la 1e lettre soit en Majuscule sinon le champ est PRIVÉ !!!
-	Name          string
-	Location      string
-	Description   string
-	//phone         string
-	//admin         int
+	ID           primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	ContactEmail string             `json:"contact_email" bson:"contact_email"` // il faut bien que la 1e lettre soit en Majuscule sinon le champ est PRIVÉ !!!
+	Name         string             `json:"name"`
+	Location     string             `json:"location"`
+	Description  string             `json:"description"`
+	Admin        string             `json:"admin"` //	Admin        primitive.ObjectID `json:"admin" bson:"admin"`
+	Phone        string             `json:"phone"`
 }
 
 func main() {
@@ -64,10 +64,10 @@ func main() {
 
 	fmt.Println("Inserted a single document: ", insertResult.InsertedID)*/
 	assoTest := Association{
-		Contact_email: "asso@insa-lyon.fr",
-		Name:          "Asso 1",
-		Location:      "20 avenue albert einsten",
-		Description:   "dfgdgdfg",
+		ContactEmail: "asso@insa-lyon.fr",
+		Name:         "Asso 1",
+		Location:     "20 avenue albert einsten",
+		Description:  "dfgdgdfg",
 		//phone:         "012345678987",
 		//admin:         1,
 	}
@@ -96,26 +96,15 @@ func main() {
 
 }
 func serveHttp(coll *mongo.Collection) {
-
-	http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+	m := macaron.Classic()
+	m.Use(macaron.Renderer(macaron.RenderOptions{IndentJSON: true}))
+	m.Get("/events/", func(ctx *macaron.Context) {
+		ctx.JSON(200, listAssos(coll))
 	})
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Content-Type", "application/json")
-		assos := listAssos(coll)
-		json, err := json.Marshal(assos)
-		if err == nil {
-			w.Write(json)
-		} else {
-			log.Fatal(err)
-		}
-
-	})
-
-	log.Fatal(http.ListenAndServe(":8080", nil))
-
+	m.Run()
 }
 func listAssos(assoCollection *mongo.Collection) []Association {
+	defer timeTrack(time.Now(), "listAssos")
 	var assos []Association
 	findOptions := options.Find()
 	//findOptions.SetLimit(10)
@@ -140,6 +129,14 @@ func listAssos(assoCollection *mongo.Collection) []Association {
 	}
 
 	// Close the cursor once finished
-	cur.Close(context.TODO())
+	err = cur.Close(context.TODO())
+	if err != nil {
+		log.Fatal(err)
+	}
 	return assos
+}
+
+func timeTrack(start time.Time, name string) { //https://coderwall.com/p/cp5fya/measuring-execution-time-in-go
+	elapsed := time.Since(start)
+	log.Printf("%s took %s", name, elapsed)
 }
