@@ -40,6 +40,14 @@
   version = "v1.10.3"
 
 [[projects]]
+  digest = "1:e2ac6e4ee843b2001b6c3a7801180ea3f7fa6d61fb917ca7dde15e26ef02a082"
+  name = "github.com/mattn/go-sqlite3"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9bdaffc12bf8be15afceb51bb60851edd4afdff5"
+  version = "v2.0.3"
+
+[[projects]]
   digest = "1:9e1d37b58d17113ec3cb5608ac0382313c5b59470b94ed97d0976e69c7022314"
   name = "github.com/pkg/errors"
   packages = ["."]
@@ -162,8 +170,8 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/mattn/go-sqlite3",
     "go.mongodb.org/mongo-driver/bson",
-    "go.mongodb.org/mongo-driver/bson/primitive",
     "go.mongodb.org/mongo-driver/mongo",
     "go.mongodb.org/mongo-driver/mongo/options",
     "gopkg.in/macaron.v1",
