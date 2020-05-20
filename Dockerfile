@@ -17,10 +17,8 @@ COPY main.go build
 
 RUN cd build && dep ensure
 
-RUN cd build && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main main.go # build
-
-FROM alpine:3.11
-COPY --from=builder /go/src/build/main .
+RUN cd build && GOOS=linux go build -a -installsuffix cgo -o main main.go
+RUN cp /go/src/build/main /main
 EXPOSE 4000
 ENV DB_FILE /db/db.sqlite3
 CMD ["/main"]
