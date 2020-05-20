@@ -17,7 +17,7 @@ COPY main.go build
 
 RUN cd build && dep ensure
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main main.go # build
+RUN cd build && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main main.go # build
 
 FROM alpine:3.11
 COPY --from=builder /go/src/build/main .

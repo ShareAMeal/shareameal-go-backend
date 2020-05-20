@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"gopkg.in/macaron.v1"
-	"log"
 	"os"
 	"time"
 )
@@ -41,11 +42,13 @@ type Event struct {
 }
 
 func main() {
-	dbfile := os.Getenv("DB_FILE")
+	dbfile := os.Getenv("DATABASE_URL")
+	driver := os.Getenv("DATABASE_DRIVER") // sqlite ou postgres
 	if dbfile == "" {
+		driver = "sqlite3"
 		dbfile = "./db.sqlite3"
 	}
-	serveHttp(setupDb(dbfile))
+	serveHttp(setupDb(driver, dbfile))
 }
 func serveHttp(db *sql.DB) {
 	m := macaron.Classic()
@@ -73,8 +76,17 @@ func serveHttp(db *sql.DB) {
 	m.Run()
 }
 
-func setupDb(databaseUrl string) *sql.DB {
-	db, err := sql.Open("sqlite3", databaseUrl)
+func setupDb(driver string, databaseUrl string) *sql.DB {
+	switch driver {
+	case "sqlite3":
+		break
+	case "postgres":
+		break
+	default:
+		panic(errors.New("utilisation d'un driver SQL inconnu"))
+	}
+	fmt.Printf("utilisation du driver %s avec l'URL %s\n", driver, databaseUrl)
+	db, err := sql.Open(driver, databaseUrl) //databaseUrl)
 	handleError(err)
 	err2 := db.PingContext(context.TODO())
 	if err2 != nil {
@@ -109,11 +121,6 @@ func listEvents(db *sql.DB) []Event {
 		events = append(events, event)
 	}
 	return events
-}
-
-func timeTrack(start time.Time, name string) { //https://coderwall.com/p/cp5fya/measuring-execution-time-in-go
-	elapsed := time.Since(start)
-	log.Printf("%s took %s", name, elapsed)
 }
 
 func handleError(err error) {
